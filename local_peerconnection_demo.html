@@ -1,0 +1,97 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>Local Peer Connection Demo</title>
+    <script type="text/javascript">
+    var localPC = null;
+    var remotePC = null;
+
+    function playMediaFromStream(element_id, stream) {
+      var video = document.getElementById(element_id);
+      video.mozSrcObject = stream;
+      video.play();
+    }
+
+    function setupPeerConnections() {
+      localPC = new mozRTCPeerConnection({"iceServers":[{"url":"stun:23.21.150.121"}]});
+      remotePC = new mozRTCPeerConnection({"iceServers":[{"url":"stun:23.21.150.121"}]});
+
+      localPC.onaddstream = function(event) {
+        playMediaFromStream('computer1remoteVideo', event.stream);
+      };
+
+      remotePC.onaddstream = function(event) {
+        playMediaFromStream('computer2remoteVideo', event.stream);
+      };
+    }
+
+    function setupStreams(onSuccess) {
+      navigator.mozGetUserMedia({video: true, audio: true}, function(localStream) {
+        localPC.addStream(localStream);
+        playMediaFromStream('computer1localVideo', localStream);
+
+        navigator.mozGetUserMedia({video: true, audio: true}, function(remoteStream) {
+          remotePC.addStream(remoteStream);
+          playMediaFromStream('computer2localVideo', remoteStream);
+          onSuccess();
+        }, function(err) {
+          console.log(err);
+        });
+      }, function(err) {
+        console.log(err);
+      });
+    }
+
+    function setupOfferForLocalPeer(onSuccess) {
+      localPC.createOffer(function(localSDP) {
+        localPC.setLocalDescription(localSDP, function() {
+          onSuccess(localSDP);
+        }, function(err) {
+          console.log(err);
+        });
+      }, function(err) {
+        console.log(err);
+      });
+    }
+
+    function setupRemotePeer(localSDP, onSuccess) {
+      remotePC.setRemoteDescription(localSDP, function() {
+        remotePC.createAnswer(function(remoteSDP) {
+          remotePC.setLocalDescription(remoteSDP, function() {
+            onSuccess(remoteSDP);
+          }, function(err) {
+            console.log(err);
+          });
+        }, function(err) {
+          console.log(err);
+        });
+      }, function(err) {
+        console.log(err);
+      });
+    }
+
+    function setAnswerForLocalPeer(answerSDP) {
+      localPC.setRemoteDescription(answerSDP, function() {
+        console.log('Handshake finished');
+      }, function(err) {
+        console.log(err);
+      });
+    }
+
+    setupPeerConnections();
+    setupStreams(function() {
+      setupOfferForLocalPeer(function(localSDP) {
+        setupRemotePeer(localSDP, function(answerSDP) {
+          setAnswerForLocalPeer(answerSDP);
+        });
+      });
+    });
+    </script>
+  </head>
+  <body>
+    <video id="computer1localVideo" controls></video>
+    <video id="computer1remoteVideo" controls></video>
+    <video id="computer2localVideo" controls></video>
+    <video id="computer2remoteVideo" controls></video>
+  </body>
+</html>
