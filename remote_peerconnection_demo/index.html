@@ -75,18 +75,11 @@
         }, writeErrorToConsole);
       }
 
-      function remoteOfferReceived(msg) {
-        var remoteSessionDescription = new mozRTCSessionDescription({
-          'type': msg.type,
-          'sdp': msg.sdp
-        });
-
-        remoteClientId = msg.client_id;
-
-        localPC.setRemoteDescription(remoteSessionDescription, function() {
+      function setupRemotePeer(sdp) {
+        localPC.setRemoteDescription(sdp, function() {
           localPC.createAnswer(function(answerSDP) {
             localPC.setLocalDescription(answerSDP, function() {
-              sendDataToRemoteClient(msg.client_id, JSON.stringify({
+              sendDataToRemoteClient(remoteClientId, JSON.stringify({
                 'client_id': '{{ client_id }}',
                 'type': 'answer',
                 'sdp': answerSDP.sdp
@@ -94,6 +87,16 @@
             }, writeErrorToConsole);
           }, writeErrorToConsole);
         }, writeErrorToConsole);
+      }
+
+      function remoteOfferReceived(msg) {
+        var remoteSessionDescription = new mozRTCSessionDescription({
+          'type': msg.type,
+          'sdp': msg.sdp
+        });
+
+        remoteClientId = msg.client_id;
+        setupRemotePeer(remoteSessionDescription);
       }
 
       function submitRemoteClientId() {
