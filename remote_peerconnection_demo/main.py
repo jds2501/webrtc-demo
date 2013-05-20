@@ -24,33 +24,33 @@ jinja_environment = jinja2.Environment(
   loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
 
 def generate_random(len):
-	word = ''
-	for i in range(len):
-		word += random.choice('0123456789')
-	return word
+  word = ''
+  for i in range(len):
+    word += random.choice('0123456789')
+  return word
 
 def create_channel(client_id):
-	return channel.create_channel(client_id, 30)
+  return channel.create_channel(client_id, 30)
 
 class SendDataClientPage(webapp2.RequestHandler):
 
-	def post(self):
-		remote_id = self.request.get('remoteClientId')
-		data = self.request.body
-		channel.send_message(remote_id, data)
+  def post(self):
+    remote_id = self.request.get('remoteClientId')
+    data = self.request.body
+    channel.send_message(remote_id, data)
 
 class MainPage(webapp2.RequestHandler):
 
   def get(self):
-		client_id = generate_random(10)
-		token = create_channel(client_id);
-		template = jinja_environment.get_template('index.html')
-		self.response.out.write(template.render({
-			'token': token,
-			'client_id': client_id
-		}))
+    client_id = generate_random(10)
+    token = create_channel(client_id);
+    template = jinja_environment.get_template('index.html')
+    self.response.out.write(template.render({
+      'token': token,
+      'client_id': client_id
+    }))
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
-		('/send', SendDataClientPage)
+    ('/send', SendDataClientPage)
 ], debug=True)
