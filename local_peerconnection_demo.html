@@ -1,26 +1,26 @@
 ﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
-    <!--
-    Part 1: Setup our HTML page and video tags
-    -->
     <title>Local Peer Connection Demo</title>
     <script type="text/javascript">
-    // Part 2: Setup our variables we will use
     var localPC = null;
     var remotePC = null;
+    var iceConfig = {"iceServers":[{"url":"stun:23.21.150.121"}]};
+    var constraints = {video: true, audio: true};
 
-    // Part 3: Build a helper function to play media from streams
     function playMediaFromStream(element_id, stream) {
       var video = document.getElementById(element_id);
       video.mozSrcObject = stream;
       video.play();
     }
 
-    // Part 4: Setup our local and remote peer connection objects
+    function writeErrorToConsole(err) {
+      console.log(err);
+    }
+
     function setupPeerConnections() {
-      localPC = new mozRTCPeerConnection({"iceServers":[{"url":"stun:23.21.150.121"}]});
-      remotePC = new mozRTCPeerConnection({"iceServers":[{"url":"stun:23.21.150.121"}]});
+      localPC = new mozRTCPeerConnection(iceConfig);
+      remotePC = new mozRTCPeerConnection(iceConfig);
 
       localPC.onaddstream = function(event) {
         playMediaFromStream('computer1remoteVideo', event.stream);
@@ -31,68 +31,43 @@
       };
     }
 
-    // Part 5: For each peer, get an audio & video stream, add it to the
-    //         respective peer connection object, and start playing the stream.
     function setupStreams(onSuccess) {
-      navigator.mozGetUserMedia({video: true, audio: true}, function(localStream) {
+      navigator.mozGetUserMedia(constraints, function(localStream) {
         localPC.addStream(localStream);
         playMediaFromStream('computer1localVideo', localStream);
 
-        navigator.mozGetUserMedia({video: true, audio: true}, function(remoteStream) {
+        navigator.mozGetUserMedia(constraints, function(remoteStream) {
           remotePC.addStream(remoteStream);
           playMediaFromStream('computer2localVideo', remoteStream);
           onSuccess();
-        }, function(err) {
-          console.log(err);
-        });
-      }, function(err) {
-        console.log(err);
-      });
+        }, writeErrorToConsole);
+      }, writeErrorToConsole);
     }
 
-    // Part 6: Create and set the offer session description on the local
-    //         peer connection object
     function setupOfferForLocalPeer(onSuccess) {
       localPC.createOffer(function(localSDP) {
         localPC.setLocalDescription(localSDP, function() {
           onSuccess(localSDP);
-        }, function(err) {
-          console.log(err);
-        });
-      }, function(err) {
-        console.log(err);
-      });
+        }, writeErrorToConsole);
+      }, writeErrorToConsole);
     }
 
-    // Part 7: Set the local session description on the remote peer,
-    //         generate an answer session description and set it to the
-    //         remote peer.
     function setupRemotePeer(localSDP, onSuccess) {
       remotePC.setRemoteDescription(localSDP, function() {
         remotePC.createAnswer(function(remoteSDP) {
           remotePC.setLocalDescription(remoteSDP, function() {
             onSuccess(remoteSDP);
-          }, function(err) {
-            console.log(err);
-          });
-        }, function(err) {
-          console.log(err);
-        });
-      }, function(err) {
-        console.log(err);
-      });
+          }, writeErrorToConsole);
+        }, writeErrorToConsole);
+      }, writeErrorToConsole);
     }
 
-    // Part 8: Set the answer session description on the local peer.
     function setAnswerForLocalPeer(answerSDP) {
       localPC.setRemoteDescription(answerSDP, function() {
         console.log('Handshake finished');
-      }, function(err) {
-        console.log(err);
-      });
+      }, writeErrorToConsole);
     }
 
-    // Flow of execution for creating a working handshake between two peers
     setupPeerConnections();
     setupStreams(function() {
       setupOfferForLocalPeer(function(localSDP) {

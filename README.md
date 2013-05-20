@@ -1,4 +1,4 @@
 webrtc-demo
 ===========
 
-Simple WebRTC Demos
+WebRTC demos from the WebRTC Mozilla Meetup.
