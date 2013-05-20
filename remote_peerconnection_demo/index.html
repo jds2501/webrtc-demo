@@ -86,11 +86,11 @@
         localPC.setRemoteDescription(remoteSessionDescription, function() {
           localPC.createAnswer(function(answerSDP) {
             localPC.setLocalDescription(answerSDP, function() {
-							sendDataToRemoteClient(msg.client_id, JSON.stringify({
-								'client_id': '{{ client_id }}',
-								'type': 'answer',
-								'sdp': answerSDP.sdp
-							}));
+              sendDataToRemoteClient(msg.client_id, JSON.stringify({
+                'client_id': '{{ client_id }}',
+                'type': 'answer',
+                'sdp': answerSDP.sdp
+              }));
             }, writeErrorToConsole);
           }, writeErrorToConsole);
         }, writeErrorToConsole);
